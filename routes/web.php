@@ -11,10 +11,13 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
+
+Route::redirect('/', '/recommendation/home');
+
+Route::group(['prefix' => '/recommendation', 'as' => 'recommendation.'], function() {
+    Route::get('/home', 'RecommendationController@home')->name('home');
+    Route::get('/search', 'RecommendationController@search')->name('search');
+});
