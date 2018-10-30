@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 use Goutte\Client as Goutte;
 
@@ -13,27 +14,13 @@ use Illuminate\Support\Facades\Cache;
 use Kevinrob\GuzzleCache\Strategy\PrivateCacheStrategy;
 use Kevinrob\GuzzleCache\Storage\LaravelCacheStorage;
 
+use Symfony\Component\Panther\Client as Panther;
+
 class RecommendationController extends Controller
 {
     public function __construct()
     {
-        $stack = HandlerStack::create();
-        
-        $stack->push(
-            new CacheMiddleware(
-              new PrivateCacheStrategy(
-                new LaravelCacheStorage(
-                  Cache::store('database')
-                )
-              )
-            ),
-            'cache'
-        );
-
-        $guzzle_client = new GuzzleClient(['handler' => $stack]);
-
-        $this->scraper = new Goutte();
-        $this->scraper->setClient($guzzle_client);
+        $this->scraper = Panther::createChromeClient();
     }
 
     public function home()
@@ -43,13 +30,17 @@ class RecommendationController extends Controller
 
     public function search()
     {
-        $data = $this->validate(request(), [
-            'keyword' => 'required|string'
-        ]);
+        return view('recommendation.search');
+    }
 
-        $products = $this->getFromBukalapak($data['keyword'], 10);
-        
-        return view('recommendation.search', compact('products'));
+    public function searchBukalapak()
+    {
+        return $this->getFromBukalapak(request('keyword'), 5);
+    }
+
+    public function searchShopee()
+    {
+        return $this->getFromShopee(request('keyword'), 5);
     }
 
     public function getFromBukalapak($keyword = '', $limit = 5)
@@ -65,6 +56,8 @@ class RecommendationController extends Controller
             ->each(function ($product_card, $i) use($products, $limit) {
 
                 if ($i + 1 > $limit) { return; }
+
+                $id = (string) Str::orderedUuid();
 
                 $name = $product_card
                     ->filter('article.product-display')
@@ -86,19 +79,87 @@ class RecommendationController extends Controller
                     ->filter('img.product-media__img')
                     ->attr('data-src');
 
-                $sub_crawler = $this->scraper->request(
-                    'GET', $url
-                );
-
-                $sales_count = trim($sub_crawler
-                    ->filter('dd.c-deflist__value.qa-pd-seen-value.js-product-seen-value')
-                    ->text());
-
-                $products->push(compact('name', 'price', 'url', 'img_url', 'sales_count', 'rating'));
+                $products->push(compact('id', 'name', 'price', 'url', 'img_url', 'rating'));
         });
 
-        $products = $products->sortByDesc('sales_count');
+        $products->transform(function ($product) {
+            $crawler = $this->scraper->request('GET', $product['url']);
 
+            $sales_node = $crawler->filter('dd.c-deflist__value.qa-pd-sold-value');
+            $product['sales'] = $sales_node->count() != 0 ? trim($sales_node->text()) : 0;
+
+            $product['source'] = 'Bukalapak';
+            return $product;
+        });
+
+        $products = $products->sortByDesc('sales');
+        return $products;
+    }
+
+    public function getFromShopee($keyword = '', $limit = 5)
+    {
+        $crawler = $this->scraper->request('GET', "https://shopee.co.id/search?keyword=$keyword");
+
+        $products = collect();
+
+        $this->scraper->waitFor('div.shopee-search-item-result__item');
+
+        $crawler->filter('div.shopee-search-item-result__item')->each(function($product_card, $i) use($products, $limit) {
+            // Don't process if exceeds limit
+            if ($i + 1 > $limit) { return; }
+
+            // Check if the product name is found, skip if not
+            $name_node = $product_card->filter('div.shopee-item-card__text-name');
+            if ($name_node->count() == 0) { return; }
+            $name = trim($name_node->text());
+            
+            // Price
+            $price_node = $product_card->filter('.shopee-item-card__current-price');
+            if ($price_node->count() == 0) { return; }
+            $price = $price_node->text();
+
+            $url = $product_card
+                ->filter('a.shopee-item-card--link')
+                ->link()
+                ->getUri();
+
+            $this->scraper->waitFor('div.shopee-item-card__cover-img-background.animated-lazy-image__image--ready');
+
+            $img_url = $product_card
+                ->filter('div.shopee-item-card__cover-img-background.animated-lazy-image__image--ready')
+                ->attr('style');
+
+            // Obtain IMG URL
+            $bg_image_str_pos = strpos($img_url, "background-image: ");
+            $opening_quote_pos = strpos($img_url, "\"", $bg_image_str_pos);
+            $closing_quote_pos = strpos($img_url, "\"", $opening_quote_pos + 1);
+            $img_url = substr($img_url, $opening_quote_pos + 1, $closing_quote_pos - $opening_quote_pos - 1);
+
+
+            // Generate id
+            $id = (string) Str::orderedUuid();
+    
+            $products->push(compact("id", "name", "price", "url", "img_url", 'style'));
+        });
+
+        $products->transform(function ($product) {
+            $crawler = $this->scraper->request('GET', $product['url']);
+            $this->scraper->waitFor("div.flex.flex-auto._2uVI-L");
+            $this->scraper->waitFor("div._3Vd3aw");
+
+            $product['sales'] = trim($crawler
+                ->filter('div._3Vd3aw')
+                ->text());
+
+            $rating_node = $crawler->filter('div._3d0_dh.EdxoqP');
+            $product['rating'] = $rating_node->count() != 0 ? trim($rating_node->text()) : 0;
+
+            $product['source'] = 'Shopee';
+
+            return $product;
+        });
+
+        $products = $products->sortByDesc('sales');
         return $products;
     }
 }

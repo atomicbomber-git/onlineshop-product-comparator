@@ -13903,7 +13903,7 @@ window.Vue = __webpack_require__(36);
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
 
-Vue.component('example-component', __webpack_require__(39));
+Vue.component('item-search', __webpack_require__(39));
 
 var app = new Vue({
   el: '#app'
@@ -47206,7 +47206,7 @@ var Component = normalizeComponent(
   __vue_scopeId__,
   __vue_module_identifier__
 )
-Component.options.__file = "resources/js/components/ExampleComponent.vue"
+Component.options.__file = "resources/js/components/ItemSearch.vue"
 
 /* hot reload */
 if (false) {(function () {
@@ -47215,9 +47215,9 @@ if (false) {(function () {
   if (!hotAPI.compatible) return
   module.hot.accept()
   if (!module.hot.data) {
-    hotAPI.createRecord("data-v-299e239e", Component.options)
+    hotAPI.createRecord("data-v-04304c74", Component.options)
   } else {
-    hotAPI.reload("data-v-299e239e", Component.options)
+    hotAPI.reload("data-v-04304c74", Component.options)
   }
   module.hot.dispose(function (data) {
     disposed = true
@@ -47358,10 +47358,33 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     mounted: function mounted() {
-        console.log('Component mounted.');
+        var _this = this;
+
+        // Load from Shopee
+        axios.get('http://opc.com/recommendation/search/shopee', { params: { keyword: "komputer" } }).then(function (response) {
+            _this.products = response.data;
+        }).catch(function (error) {
+            alert(error);
+        });
+    },
+    data: function data() {
+        return {
+            loading_infos: {
+                'shopee': false,
+                'bukalapak': false
+            },
+            products: []
+        };
     }
 });
 
@@ -47373,38 +47396,64 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _vm._m(0)
-}
-var staticRenderFns = [
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "container" }, [
-      _c("div", { staticClass: "row justify-content-center" }, [
-        _c("div", { staticClass: "col-md-8" }, [
-          _c("div", { staticClass: "card card-default" }, [
-            _c("div", { staticClass: "card-header" }, [
-              _vm._v("Example Component")
-            ]),
+  return _c(
+    "div",
+    [
+      _c("div", { staticClass: "alert alert-info" }),
+      _vm._v(" "),
+      _vm._l(_vm.products, function(product) {
+        return _c(
+          "div",
+          {
+            key: product.id,
+            staticClass: "card mb-4 mr-3 d-inline-block",
+            staticStyle: { width: "20rem" }
+          },
+          [
+            _c("img", {
+              staticClass: "card-img-top",
+              attrs: { src: product.img_url, alt: "Card image cap" }
+            }),
             _vm._v(" "),
             _c("div", { staticClass: "card-body" }, [
-              _vm._v(
-                "\n                    I'm an example component.\n                "
-              )
+              _c("h5", { staticClass: "card-title" }),
+              _vm._v(" "),
+              _c("div", { staticClass: "card-text" }, [
+                _c("dl", [
+                  _c("dt", [_vm._v(" Sumber: ")]),
+                  _vm._v(" "),
+                  _c("dd", [
+                    _c("strong", [_vm._v(" " + _vm._s(product.source) + " ")])
+                  ]),
+                  _vm._v(" "),
+                  _c("dt", [_vm._v(" Harga: ")]),
+                  _vm._v(" "),
+                  _c("dd", [_vm._v(" " + _vm._s(product.price) + " ")]),
+                  _vm._v(" "),
+                  _c("dt", [_vm._v(" Terjual: ")]),
+                  _vm._v(" "),
+                  _c("dd", [_vm._v(" " + _vm._s(product.sales) + " ")]),
+                  _vm._v(" "),
+                  _c("dt", [_vm._v(" Rating: ")]),
+                  _vm._v(" "),
+                  _c("dd", [_vm._v(" " + _vm._s(product.rating) + " ")])
+                ])
+              ])
             ])
-          ])
-        ])
-      ])
-    ])
-  }
-]
+          ]
+        )
+      })
+    ],
+    2
+  )
+}
+var staticRenderFns = []
 render._withStripped = true
 module.exports = { render: render, staticRenderFns: staticRenderFns }
 if (false) {
   module.hot.accept()
   if (module.hot.data) {
-    require("vue-hot-reload-api")      .rerender("data-v-299e239e", module.exports)
+    require("vue-hot-reload-api")      .rerender("data-v-04304c74", module.exports)
   }
 }
 

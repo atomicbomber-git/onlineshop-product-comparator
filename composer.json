@@ -10,7 +10,9 @@
         "fideloper/proxy": "^4.0",
         "kevinrob/guzzle-cache-middleware": "^3.2",
         "laravel/framework": "5.7.*",
-        "laravel/tinker": "^1.0"
+        "laravel/tinker": "^1.0",
+        "moontoast/math": "^1.1",
+        "symfony/panther": "^0.2.0"
     },
     "require-dev": {
         "beyondcode/laravel-dump-server": "^1.0",

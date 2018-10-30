@@ -20,4 +20,7 @@ Route::redirect('/', '/recommendation/home');
 Route::group(['prefix' => '/recommendation', 'as' => 'recommendation.'], function() {
     Route::get('/home', 'RecommendationController@home')->name('home');
     Route::get('/search', 'RecommendationController@search')->name('search');
+
+    Route::get('/search/bukalapak', 'RecommendationController@searchBukalapak')->name('search.bukalapak');
+    Route::get('/search/shopee', 'RecommendationController@searchShopee')->name('search.shopee');
 });
