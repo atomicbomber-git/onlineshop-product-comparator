@@ -47,19 +47,24 @@ class RecommendationController extends Controller
             'keyword' => 'required|string'
         ]);
 
+        $products = $this->getFromBukalapak($data['keyword'], 10);
+        
+        return view('recommendation.search', compact('products'));
+    }
+
+    public function getFromBukalapak($keyword = '', $limit = 5)
+    {
         $crawler = $this->scraper->request(
             'GET',
-            "https://www.bukalapak.com/products?utf8=%E2%9C%93&source=navbar&from=omnisearch&search_source=omnisearch_organic&search%5Bhashtag%5D=&search%5Bkeywords%5D=$data[keyword]"
+            "https://www.bukalapak.com/products?utf8=%E2%9C%93&source=navbar&from=omnisearch&search_source=omnisearch_organic&search%5Bhashtag%5D=&search%5Bkeywords%5D=$keyword"
         );
 
         $products = collect();
 
         $crawler->filter('div.product-card')
-            ->each(function ($product_card, $i) use($products) {
+            ->each(function ($product_card, $i) use($products, $limit) {
 
-                if ($i > 5) {
-                    return;
-                }
+                if ($i + 1 > $limit) { return; }
 
                 $name = $product_card
                     ->filter('article.product-display')
@@ -73,6 +78,9 @@ class RecommendationController extends Controller
                     ->filter('a.product-media__link')
                     ->link()
                     ->getUri();
+
+                $rating_node = $product_card->filter('span.rating');
+                $rating = $rating_node->count() > 0 ? $rating_node->attr('title') : 0;
                 
                 $img_url = $product_card
                     ->filter('img.product-media__img')
@@ -82,17 +90,15 @@ class RecommendationController extends Controller
                     'GET', $url
                 );
 
-                $sales_count = $sub_crawler
+                $sales_count = trim($sub_crawler
                     ->filter('dd.c-deflist__value.qa-pd-seen-value.js-product-seen-value')
-                    ->text();
+                    ->text());
 
-                $sales_count = trim($sales_count);
-
-                $products->push(compact('name', 'price', 'url', 'img_url', 'sales_count'));
+                $products->push(compact('name', 'price', 'url', 'img_url', 'sales_count', 'rating'));
         });
 
         $products = $products->sortByDesc('sales_count');
 
-        return view('recommendation.search', compact('products'));
+        return $products;
     }
 }
