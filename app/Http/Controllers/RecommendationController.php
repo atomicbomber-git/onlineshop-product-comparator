@@ -72,9 +72,8 @@ class RecommendationController extends Controller
 
                 $id = (string) Str::orderedUuid();
 
-                $name = $product_card
-                    ->filter('article.product-display')
-                    ->attr('data-name');
+                $name = $product_card->filter('article.product-display')->attr('data-name');
+                $short_name = str_limit($name, 25);
 
                 $price = $product_card
                     ->filter('div.product-price')
@@ -82,19 +81,18 @@ class RecommendationController extends Controller
 
                 $price = "Rp." . number_format($price);
                 
-                $url = $product_card
-                    ->filter('a.product-media__link')
+                $url = $product_card->filter('a.product-media__link')
                     ->link()
                     ->getUri();
 
                 $rating_node = $product_card->filter('span.rating');
-                $rating = $rating_node->count() > 0 ? $rating_node->attr('title') : 0;
+                $rating = $rating_node->count() > 0 ? (int) $rating_node->attr('title') : 0;
                 
                 $img_url = $product_card
                     ->filter('img.product-media__img')
                     ->attr('data-src');
 
-                $products->push(compact('id', 'name', 'price', 'url', 'img_url', 'rating'));
+                $products->push(compact('id', 'name', 'short_name', 'price', 'url', 'img_url', 'rating'));
         });
 
         $products->transform(function ($product) {
@@ -128,55 +126,52 @@ class RecommendationController extends Controller
             $name_node = $product_card->filter('div.shopee-item-card__text-name');
             if ($name_node->count() == 0) { ++$limit; return; }
             $name = trim($name_node->text());
+            $short_name = str_limit($name, 25);
             
             // Price
             $price_node = $product_card->filter('.shopee-item-card__current-price');
             if ($price_node->count() == 0) { ++$limit; return; }
             $price = $price_node->text();
+            
+            // Product URL
+            $url_node = $product_card->filter('a.shopee-item-card--link');
+            if ($url_node->count() == 0) { ++$limit; return; }
+            $url = $url_node->link()->getUri();
 
-            $url = $product_card
-                ->filter('a.shopee-item-card--link')
-                ->link()
-                ->getUri();
-
+            // Product Image URL
             $this->scraper->waitFor('div.shopee-item-card__cover-img-background.animated-lazy-image__image--ready');
-
             $img_url_node = $product_card->filter('div.shopee-item-card__cover-img-background.animated-lazy-image__image--ready');
             if ($img_url_node->count() == 0) { ++$limit; return; }
             $img_url = $img_url_node->attr('style'); 
                
-            // Obtain IMG URL
+            // Extract Image URL from style attribute
             $bg_image_str_pos = strpos($img_url, "background-image: ");
             $opening_quote_pos = strpos($img_url, "\"", $bg_image_str_pos);
             $closing_quote_pos = strpos($img_url, "\"", $opening_quote_pos + 1);
             $img_url = substr($img_url, $opening_quote_pos + 1, $closing_quote_pos - $opening_quote_pos - 1);
 
-
             // Generate id
             $id = (string) Str::orderedUuid();
     
-            $products->push(compact("id", "name", "price", "url", "img_url", 'style'));
+            $products->push(compact("id", "name", "short_name", "price", "url", "img_url", 'style'));
         });
 
         $products->transform(function ($product) {
             $crawler = $this->scraper->request('GET', $product['url']);
-            $this->scraper->waitFor("div.flex.flex-auto._2uVI-L");
-            $this->scraper->waitFor("div._3Vd3aw");
+            // $this->scraper->waitFor("div.flex.flex-auto._2uVI-L");
 
-            $product['sales'] = trim($crawler
-                ->filter('div._3Vd3aw')
-                ->text());
+            $this->scraper->waitFor("div._3Vd3aw");
+            $sales_node = $crawler->filter('div._3Vd3aw');
+            $product['sales'] = $sales_node->count() != 0 ? (int) trim($sales_node->text()) : 0;
 
             $rating_node = $crawler->filter('div._3d0_dh.EdxoqP');
             $product['rating'] = $rating_node->count() != 0 ? (int) trim($rating_node->text()) : 0;
 
             $product['source'] = 'Shopee';
-
             return $product;
         });
 
         $products = $products->keyBy('id');
-        $products = $products->sortByDesc('sales');
         return $products;
     }
 }

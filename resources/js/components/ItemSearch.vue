@@ -1,7 +1,10 @@
 <template>
     <div>
         <div class="alert alert-info" v-if="is_loading">
-            <strong> Melakukan pencarian... </strong>
+            <strong>
+                <i class="fa fa-spinner fa-spin fa-fw"></i>
+                Melakukan pencarian...
+            </strong>
         </div>
 
         <div v-for="product in products" :key="product.id" class="card mb-4 mr-3 d-inline-block" style="width: 20rem;">
@@ -9,15 +12,18 @@
             <div class="card-body">
                 <h5 class="card-title"> </h5>
                 <div class="card-text">
-                    <h5 class="card-title"> {{ product.name }} </h5>
+                    <h5 class="card-title"> {{ product.short_name }} </h5>
                     <h6 class="card-subtitle mb-2 text-muted"> {{ product.source }} </h6>
-                    <div class="row">
+                    <div class="row mb-3">
                         <div class="col">
                             <dt> Harga: </dt> <dd> {{ product.price }} </dd>
-                            <dt> Rating: </dt> <dd> {{ product.rating }} </dd>
                             <dt> Terjual: </dt> <dd> {{ product.sales }} </dd>
                         </div>
                         <div class="col">
+                            <dt> Rating: </dt>
+                            <dd>
+                                <star-rating star-size="20" :rating="product.rating" :read-only="true"> </star-rating>
+                            </dd>
                         </div>
                     </div>
                     <a :href="product.url" class="btn btn-primary"> Detail </a>

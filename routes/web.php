@@ -15,7 +15,7 @@ Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
 
-Route::redirect('/', '/recommendation/search');
+Route::redirect('/', '/recommendation/home');
 
 Route::group(['prefix' => '/recommendation', 'as' => 'recommendation.'], function() {
     Route::get('/home', 'RecommendationController@home')->name('home');

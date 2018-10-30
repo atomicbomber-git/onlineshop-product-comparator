@@ -6,6 +6,7 @@
  */
 
 require('./bootstrap');
+import StarRating from 'vue-star-rating'
 
 window.Vue = require('vue');
 
@@ -16,6 +17,7 @@ window.Vue = require('vue');
  */
 
 Vue.component('item-search', require('./components/ItemSearch.vue'));
+Vue.component('star-rating', StarRating);
 
 const app = new Vue({
     el: '#app'
