@@ -30,7 +30,20 @@ class RecommendationController extends Controller
 
     public function search()
     {
-        return view('recommendation.search');
+        $data = $this->validate(request(), [
+            'keyword' => 'string|required'
+        ]);
+
+        return view('recommendation.search', ['keyword' => $data['keyword']]);
+    }
+
+    public function searchAll()
+    {
+        $products = collect();
+        $products = $products->merge($this->getFromBukalapak(request('keyword'), 5));
+        $products = $products->merge($this->getFromShopee(request('keyword'), 5));
+
+        return $products;
     }
 
     public function searchBukalapak()
@@ -66,6 +79,8 @@ class RecommendationController extends Controller
                 $price = $product_card
                     ->filter('div.product-price')
                     ->attr('data-reduced-price');
+
+                $price = "Rp." . number_format($price);
                 
                 $url = $product_card
                     ->filter('a.product-media__link')
@@ -86,12 +101,13 @@ class RecommendationController extends Controller
             $crawler = $this->scraper->request('GET', $product['url']);
 
             $sales_node = $crawler->filter('dd.c-deflist__value.qa-pd-sold-value');
-            $product['sales'] = $sales_node->count() != 0 ? trim($sales_node->text()) : 0;
+            $product['sales'] = $sales_node->count() != 0 ? (int) trim($sales_node->text()) : 0;
 
             $product['source'] = 'Bukalapak';
             return $product;
         });
 
+        $products = $products->keyBy('id');
         $products = $products->sortByDesc('sales');
         return $products;
     }
@@ -110,12 +126,12 @@ class RecommendationController extends Controller
 
             // Check if the product name is found, skip if not
             $name_node = $product_card->filter('div.shopee-item-card__text-name');
-            if ($name_node->count() == 0) { return; }
+            if ($name_node->count() == 0) { ++$limit; return; }
             $name = trim($name_node->text());
             
             // Price
             $price_node = $product_card->filter('.shopee-item-card__current-price');
-            if ($price_node->count() == 0) { return; }
+            if ($price_node->count() == 0) { ++$limit; return; }
             $price = $price_node->text();
 
             $url = $product_card
@@ -125,10 +141,10 @@ class RecommendationController extends Controller
 
             $this->scraper->waitFor('div.shopee-item-card__cover-img-background.animated-lazy-image__image--ready');
 
-            $img_url = $product_card
-                ->filter('div.shopee-item-card__cover-img-background.animated-lazy-image__image--ready')
-                ->attr('style');
-
+            $img_url_node = $product_card->filter('div.shopee-item-card__cover-img-background.animated-lazy-image__image--ready');
+            if ($img_url_node->count() == 0) { ++$limit; return; }
+            $img_url = $img_url_node->attr('style'); 
+               
             // Obtain IMG URL
             $bg_image_str_pos = strpos($img_url, "background-image: ");
             $opening_quote_pos = strpos($img_url, "\"", $bg_image_str_pos);
@@ -152,13 +168,14 @@ class RecommendationController extends Controller
                 ->text());
 
             $rating_node = $crawler->filter('div._3d0_dh.EdxoqP');
-            $product['rating'] = $rating_node->count() != 0 ? trim($rating_node->text()) : 0;
+            $product['rating'] = $rating_node->count() != 0 ? (int) trim($rating_node->text()) : 0;
 
             $product['source'] = 'Shopee';
 
             return $product;
         });
 
+        $products = $products->keyBy('id');
         $products = $products->sortByDesc('sales');
         return $products;
     }

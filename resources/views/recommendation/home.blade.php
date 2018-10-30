@@ -29,10 +29,10 @@
                 </div>
         
                 <div class="form-group text-right">
-                        <button class="btn btn-primary">
-                            Cari Produk
-                            <i class="fa fa-search"></i>
-                        </button>
+                    <button class="btn btn-primary">
+                        Cari Produk
+                        <i class="fa fa-search"></i>
+                    </button>
                 </div>
            </form>
         </div>

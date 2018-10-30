@@ -47342,6 +47342,14 @@ module.exports = function normalizeComponent (
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+//
+//
+//
+//
+//
+//
 //
 //
 //
@@ -47370,21 +47378,33 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     mounted: function mounted() {
         var _this = this;
 
-        // Load from Shopee
-        axios.get('http://opc.com/recommendation/search/shopee', { params: { keyword: "komputer" } }).then(function (response) {
-            _this.products = response.data;
+        // Load from all
+        this.is_loading = true;
+
+        axios.get('/recommendation/search/all', { params: { keyword: keyword } }).then(function (response) {
+            _this.products = Object.keys(response.data).map(function (key) {
+                return _extends({}, response.data[key], { id: key });
+            }).sort(function (a, b) {
+                return b.sales - a.sales;
+            });
+            _this.is_loading = false;
         }).catch(function (error) {
             alert(error);
+            _this.is_loading = false;
         });
     },
     data: function data() {
         return {
-            loading_infos: {
-                'shopee': false,
-                'bukalapak': false
-            },
+            is_loading: false,
             products: []
         };
+    },
+
+
+    computed: {
+        keyword: function keyword() {
+            return window.keyword;
+        }
     }
 });
 
@@ -47399,7 +47419,11 @@ var render = function() {
   return _c(
     "div",
     [
-      _c("div", { staticClass: "alert alert-info" }),
+      _vm.is_loading
+        ? _c("div", { staticClass: "alert alert-info" }, [
+            _c("strong", [_vm._v(" Melakukan pencarian... ")])
+          ])
+        : _vm._e(),
       _vm._v(" "),
       _vm._l(_vm.products, function(product) {
         return _c(
@@ -47419,25 +47443,40 @@ var render = function() {
               _c("h5", { staticClass: "card-title" }),
               _vm._v(" "),
               _c("div", { staticClass: "card-text" }, [
-                _c("dl", [
-                  _c("dt", [_vm._v(" Sumber: ")]),
-                  _vm._v(" "),
-                  _c("dd", [
-                    _c("strong", [_vm._v(" " + _vm._s(product.source) + " ")])
+                _c("h5", { staticClass: "card-title" }, [
+                  _vm._v(" " + _vm._s(product.name) + " ")
+                ]),
+                _vm._v(" "),
+                _c("h6", { staticClass: "card-subtitle mb-2 text-muted" }, [
+                  _vm._v(" " + _vm._s(product.source) + " ")
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "row" }, [
+                  _c("div", { staticClass: "col" }, [
+                    _c("dt", [_vm._v(" Harga: ")]),
+                    _vm._v(" "),
+                    _c("dd", [_vm._v(" " + _vm._s(product.price) + " ")]),
+                    _vm._v(" "),
+                    _c("dt", [_vm._v(" Rating: ")]),
+                    _vm._v(" "),
+                    _c("dd", [_vm._v(" " + _vm._s(product.rating) + " ")]),
+                    _vm._v(" "),
+                    _c("dt", [_vm._v(" Terjual: ")]),
+                    _vm._v(" "),
+                    _c("dd", [_vm._v(" " + _vm._s(product.sales) + " ")])
                   ]),
                   _vm._v(" "),
-                  _c("dt", [_vm._v(" Harga: ")]),
-                  _vm._v(" "),
-                  _c("dd", [_vm._v(" " + _vm._s(product.price) + " ")]),
-                  _vm._v(" "),
-                  _c("dt", [_vm._v(" Terjual: ")]),
-                  _vm._v(" "),
-                  _c("dd", [_vm._v(" " + _vm._s(product.sales) + " ")]),
-                  _vm._v(" "),
-                  _c("dt", [_vm._v(" Rating: ")]),
-                  _vm._v(" "),
-                  _c("dd", [_vm._v(" " + _vm._s(product.rating) + " ")])
-                ])
+                  _c("div", { staticClass: "col" })
+                ]),
+                _vm._v(" "),
+                _c(
+                  "a",
+                  {
+                    staticClass: "btn btn-primary",
+                    attrs: { href: product.url }
+                  },
+                  [_vm._v(" Detail ")]
+                )
               ])
             ])
           ]
