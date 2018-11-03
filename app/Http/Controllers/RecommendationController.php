@@ -18,10 +18,11 @@ use Symfony\Component\Panther\Client as Panther;
 
 class RecommendationController extends Controller
 {
+    private $name_char_limit = 25;
+
     public function __construct()
     {
         $this->non_js_scraper = new Goutte();
-        // $this->scraper = Panther::createChromeClient();
     }
 
     public function home()
@@ -84,7 +85,7 @@ class RecommendationController extends Controller
                 $id = (string) Str::orderedUuid();
 
                 $name = $product_card->filter('article.product-display')->attr('data-name');
-                $short_name = str_limit($name, 25);
+                $short_name = str_limit($name, $this->name_char_limit);
 
                 $price = $product_card->filter('div.product-price')->attr('data-reduced-price');
                 $price = "Rp." . number_format($price);
@@ -124,6 +125,7 @@ class RecommendationController extends Controller
             if ($i > $limit) { return; }
 
             $name = $product_card->filter('a.pordLink')->text();
+            $short_name = str_limit($name, $this->name_char_limit);
 
             $url = $product_card->filter('a.img')->link()->getUri();
 
@@ -134,7 +136,7 @@ class RecommendationController extends Controller
 
             $id = (string) Str::orderedUuid();
 
-            $products->push(compact('id', 'name', 'url', 'img_url', 'rating'));
+            $products->push(compact('id', 'name', 'short_name', 'url', 'img_url', 'rating'));
         });
 
         $products->transform(function($product) {
@@ -164,6 +166,7 @@ class RecommendationController extends Controller
             if ($i + 1 > $limit) { return; }
 
             $name = $product_card->filter('a.name')->text();
+            $short_name = str_limit($name, $this->name_char_limit);
             $price = $product_card->filter('div.p-price > span')->text();
 
             $rating = $product_card->filter('div.p-comstar-star a.active')->count();
@@ -174,7 +177,7 @@ class RecommendationController extends Controller
             $url = $product_card->filter('div.p-pic a')->link()->getUri();
             $img_url = $product_card->filter('div.p-pic a img')->image()->getUri();
 
-            $products->push(compact('name', 'price', 'url', 'img_url', 'rating', 'sales'));
+            $products->push(compact('name', 'short_name', 'price', 'url', 'img_url', 'rating', 'sales'));
         });
 
         $products->transform(function($product) {
