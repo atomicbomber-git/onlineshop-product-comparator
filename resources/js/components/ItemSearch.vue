@@ -8,7 +8,7 @@
         </div>
 
         <div v-for="product in sorted_products" :key="product.id" class="card mb-4 mr-3 d-inline-block" style="width: 20rem;">
-            <img class="card-img-top" :src="product.img_url" alt="Card image cap">
+            <img class="card-img-top" :src="product.img_url" style="height: 200px; width: 200px; object-fit: cover" alt="Card image cap">
             <div class="card-body">
                 <h5 class="card-title"> </h5>
                 <div class="card-text">
