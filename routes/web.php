@@ -23,5 +23,7 @@ Route::group(['prefix' => '/recommendation', 'as' => 'recommendation.'], functio
 
     Route::get('/search/all', 'RecommendationController@searchAll')->name('search.all');
     Route::get('/search/bukalapak', 'RecommendationController@searchBukalapak')->name('search.bukalapak');
+    Route::get('/search/elevenia', 'RecommendationController@searchElevenia')->name('search.elevenia');
     Route::get('/search/shopee', 'RecommendationController@searchShopee')->name('search.shopee');
+    Route::get('/search/jdid', 'RecommendationController@searchJdid')->name('search.jdid');
 });
