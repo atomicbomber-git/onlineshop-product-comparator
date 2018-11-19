@@ -39,23 +39,9 @@ class RecommendationController extends Controller
         return view('recommendation.search', ['keyword' => $data['keyword']]);
     }
 
-    public function searchAll()
-    {
-        $products = collect();
-        $products = $products->merge($this->getFromBukalapak(request('keyword'), 5));
-        // $products = $products->merge($this->getFromShopee(request('keyword'), 5));
-
-        return $products;
-    }
-
     public function searchBukalapak()
     {
         return $this->getFromBukalapak(request('keyword'), 5);
-    }
-
-    public function searchShopee()
-    {
-        return $this->getFromShopee(request('keyword'), 5);
     }
 
     public function searchElevenia()
@@ -185,71 +171,6 @@ class RecommendationController extends Controller
             return $product;
         });
 
-        return $products;
-    }
-
-    public function getFromShopee($keyword = '', $limit = 5)
-    {
-        $crawler = $this->scraper->request('GET', "https://shopee.co.id/search?keyword=$keyword");
-
-        $products = collect();
-
-        $this->scraper->waitFor('div.shopee-search-item-result__item');
-
-        $crawler->filter('div.shopee-search-item-result__item')->each(function($product_card, $i) use($products, $limit) {
-            // Don't process if exceeds limit
-            if ($i + 1 > $limit) { return; }
-
-            // Check if the product name is found, skip if not
-            $name_node = $product_card->filter('div.shopee-item-card__text-name');
-            if ($name_node->count() == 0) { ++$limit; return; }
-            $name = trim($name_node->text());
-            $short_name = str_limit($name, 25);
-            
-            // Price
-            $price_node = $product_card->filter('.shopee-item-card__current-price');
-            if ($price_node->count() == 0) { ++$limit; return; }
-            $price = $price_node->text();
-            
-            // Product URL
-            $url_node = $product_card->filter('a.shopee-item-card--link');
-            if ($url_node->count() == 0) { ++$limit; return; }
-            $url = $url_node->link()->getUri();
-
-            // Product Image URL
-            $this->scraper->waitFor('div.shopee-item-card__cover-img-background.animated-lazy-image__image--ready');
-            $img_url_node = $product_card->filter('div.shopee-item-card__cover-img-background.animated-lazy-image__image--ready');
-            if ($img_url_node->count() == 0) { ++$limit; return; }
-            $img_url = $img_url_node->attr('style'); 
-               
-            // Extract Image URL from style attribute
-            $bg_image_str_pos = strpos($img_url, "background-image: ");
-            $opening_quote_pos = strpos($img_url, "\"", $bg_image_str_pos);
-            $closing_quote_pos = strpos($img_url, "\"", $opening_quote_pos + 1);
-            $img_url = substr($img_url, $opening_quote_pos + 1, $closing_quote_pos - $opening_quote_pos - 1);
-
-            // Generate id
-            $id = (string) Str::orderedUuid();
-    
-            $products->push(compact("id", "name", "short_name", "price", "url", "img_url", 'style'));
-        });
-
-        $products->transform(function ($product) {
-            $crawler = $this->scraper->request('GET', $product['url']);
-            // $this->scraper->waitFor("div.flex.flex-auto._2uVI-L");
-
-            $this->scraper->waitFor("div._3Vd3aw");
-            $sales_node = $crawler->filter('div._3Vd3aw');
-            $product['sales'] = $sales_node->count() != 0 ? (int) trim($sales_node->text()) : 0;
-
-            $rating_node = $crawler->filter('div._3d0_dh.EdxoqP');
-            $product['rating'] = $rating_node->count() != 0 ? (int) trim($rating_node->text()) : 0;
-
-            $product['source'] = 'Shopee';
-            return $product;
-        });
-
-        $products = $products->keyBy('id');
         return $products;
     }
 }
