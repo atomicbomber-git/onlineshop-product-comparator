@@ -27,6 +27,27 @@
                         {{ $errors->first('keyword') }}
                     </div>
                 </div>
+
+                <div class="form-group d-inline-block mr-3">
+                    <div class="custom-control custom-checkbox">
+                        <input {{ request('bukalapak') == 'on' ? 'checked' : '' }} name="bukalapak" type="checkbox" class="custom-control-input" id="bukalapak">
+                        <label class="custom-control-label" for="bukalapak"> Bukalapak </label>
+                    </div>
+                </div>
+
+                <div class="form-group d-inline-block mr-3">
+                    <div class="custom-control custom-checkbox">
+                        <input {{ request('jdid') == 'on' ? 'checked' : '' }} name="jdid" type="checkbox" class="custom-control-input" id="jdid">
+                        <label class="custom-control-label" for="jdid"> JD.id </label>
+                    </div>
+                </div>
+
+                <div class="form-group d-inline-block mr-3">
+                    <div class="custom-control custom-checkbox">
+                        <input {{ request('elevenia') == 'on' ? 'checked' : '' }} name="elevenia" type="checkbox" class="custom-control-input" id="elevenia">
+                        <label class="custom-control-label" for="elevenia"> Elevenia </label>
+                    </div>
+                </div>
         
                 <div class="form-group text-right">
                     <button class="btn btn-primary">
