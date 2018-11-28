@@ -2,16 +2,9 @@
 @section('title', 'Hasil Pencarian Produk')
 @section('content')
 <div class="container my-5">
-    <h1 class='mb-5'>
-        <i class='fa fa-search'></i>
-        Pencarian Produk
-    </h1>
+    <img src="{{ asset('png/logo_large.png') }}" alt="logo">
 
-    <div class="card mb-3">
-        <div class="card-header">
-            <i class="fa fa-search"></i>
-            Pencarian Produk
-        </div>
+    <div class="card mb-3 mt-5">
         <div class="card-body">
            <form action="{{ route('recommendation.search') }}" method="GET">
                 <div class='form-group'>

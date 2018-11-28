@@ -5,10 +5,6 @@
     <img src="{{ asset('png/logo_large.png') }}" alt="logo">
 
     <div class="card mt-5">
-        <div class="card-header">
-            <i class="fa fa-search"></i>
-            Pencarian Produk
-        </div>
         <div class="card-body">
            <form action="{{ route('recommendation.search') }}" method="GET">
                 <div class='form-group'>
