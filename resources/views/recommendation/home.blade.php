@@ -2,12 +2,9 @@
 @section('title', 'Halaman Utama')
 @section('content')
 <div class="container my-5">
-    <h1 class='mb-5'>
-        <i class='fa fa-list'></i>
-        Halaman Utama
-    </h1>
+    <img src="{{ asset('png/logo_large.png') }}" alt="logo">
 
-    <div class="card">
+    <div class="card mt-5">
         <div class="card-header">
             <i class="fa fa-search"></i>
             Pencarian Produk
