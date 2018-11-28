@@ -37,17 +37,17 @@
     export default {
         mounted() {
 
-            Object.keys(this.sources).forEach(key => {
-                this.sources[key].is_loading = true
+            Object.keys(this.used_sources).forEach(key => {
+                this.used_sources[key].is_loading = true
 
                 axios.get(`/recommendation/search/${key}`, { params: { keyword: keyword } })
                     .then(response => {
                         this.products = [...this.products, ...response.data] 
-                        this.sources[key].is_loading = false
+                        this.used_sources[key].is_loading = false
                     })
                     .catch(error => {
                         alert(error)
-                        this.sources[key].is_loading = false
+                        this.used_sources[key].is_loading = false
                     })
             })
         },
@@ -56,9 +56,9 @@
             return {
                 
                 sources: {
-                    'bukalapak': { 'name': 'Bukalapak', 'is_loading': false },
-                    'elevenia': { 'name': 'Elevenia', 'is_loading': false },
-                    'jdid': { 'name': 'JD.id', 'is_loading': false }
+                    'bukalapak': { 'name': 'Bukalapak', 'is_loading': false, 'used': window.bukalapak },
+                    'elevenia': { 'name': 'Elevenia', 'is_loading': false, 'used': window.elevenia },
+                    'jdid': { 'name': 'JD.id', 'is_loading': false, 'used': window.jdid }
                 },
 
                 products: []
@@ -68,6 +68,10 @@
         computed: {
             keyword() {
                 return window.keyword
+            },
+
+            used_sources() {
+                return _.pickBy(this.sources, source => source.used)
             },
 
             loading_sources() {
